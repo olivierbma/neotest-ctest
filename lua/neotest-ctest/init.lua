@@ -1,6 +1,16 @@
 local config = require("neotest-ctest.config")
 local logger = require("neotest.logging")
 
+local function resolve(value, default, ...)
+  if value == nil then
+    return default
+  end
+  if type(value) == "function" then
+    return value(...)
+  end
+  return value
+end
+
 ---@type neotest.Adapter
 local adapter = { name = "neotest-ctest" }
 
@@ -44,8 +54,9 @@ function adapter.build_spec(args)
     return
   end
 
-  local cwd = vim.loop.cwd()
-  local root = adapter.root(position.path) or cwd
+  local search_path = resolve(args.extra_args.search_path, vim.loop.cwd())
+
+  local root = adapter.root(position.path) or search_path
   local ctest = require("neotest-ctest.ctest"):new(root)
 
   -- Collect runnable tests (known to CTest)
